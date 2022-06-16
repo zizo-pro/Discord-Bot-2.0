@@ -1,3 +1,5 @@
+from cgitb import reset
+from typing_extensions import Required
 import discord
 from Token_reader import read_token
 from Prefix_Commands import *
@@ -199,6 +201,9 @@ async def join(ctx:discord.Interaction):
     else :
         await ctx.response.send_message("You are not in a voice channel, you must be in a voice channnel to run this command!")
 
+@client.tree.command(name='kick',description='Kick specific member', guild=discord.Object(id = 839639743771836456))
+async def Kick(message, Command:discord.Interaction, member: discord.Member, reason: str) :
+    if "BOT" not in str(message.author.roles):
+        await Command.response.send_message(f"{member},{reason}")
 
-
-client.run(read_token())
+client.run("OTUwNzU0ODM1MTg2MjA4ODU4.GMFHcF.Bz11w2CqScprrAgLq-IM2Zj4_crD0uN7YvWzcY")
