@@ -1,5 +1,3 @@
-from cgitb import reset
-from typing_extensions import Required
 import discord
 from Token_reader import read_token
 from Prefix_Commands import *
@@ -9,6 +7,7 @@ from youtubesearchpython import VideosSearch
 from discord.ext import commands
 from discord.utils import get
 from DiscordUtils import Music
+from Defines import *
 
 db,intents,MY_GUILD,command = sqlite3.connect("bot_database.db"),discord.Intents.all(),discord.Object(id=839639743771836456),app_commands.CommandTree
 intents.members = True
@@ -17,41 +16,42 @@ client,cr,music = commands.Bot(command_prefix='!',intents=intents),db.cursor(),M
 
 
 
-def get_bad_words():
-    global Blocked_Words
-    cr.execute("SELECT bad_word FROM bad_words")
-    data = cr.fetchall()
-    Blocked_Words = []
-    for i in range(len(data)):
-        Blocked_Words.append(data[i][0])
-get_bad_words()
+# def get_bad_words():
+#     global Blocked_Words
+#     cr.execute("SELECT bad_word FROM bad_words")
+#     data = cr.fetchall()
+#     Blocked_Words = []
+#     for i in range(len(data)):
+#         Blocked_Words.append(data[i][0])
+# get_bad_words()
 
-def get_id(user_name):
-    cr.execute(f"SELECT id FROM users WHERE user_name = '{user_name}'")
-    it = cr.fetchone()
-    id = it[0]
-    return id
+# def get_id(user_name):
+#     cr.execute(f"SELECT id FROM users WHERE user_name = '{user_name}'")
+#     it = cr.fetchone()
+#     id = it[0]
+#     return id
 
-def get_user_name(id):
-    cr.execute(f"SELECT user_name FROM users WHERE id = '{id}'")
-    user_ame = cr.fetchone()
-    user_name = user_ame[0]
-    return user_name
+# def get_user_name(id):
+#     cr.execute(f"SELECT user_name FROM users WHERE id = '{id}'")
+#     user_ame = cr.fetchone()
+#     user_name = user_ame[0]
+#     return user_name
 
-def get_users_from_db():
-    global users
-    cr.execute("SELECT id FROM users")
-    lol = cr.fetchall()
-    users = []
-    for i in range(len(lol)):
-        users.append(lol[i][0])
-get_users_from_db()
+# def get_users_from_db():
+#     global users
+#     cr.execute("SELECT id FROM users")
+#     lol = cr.fetchall()
+#     users = []
+#     for i in range(len(lol)):
+#         users.append(lol[i][0])
 
-def get_user_XP_LVL(ig):
-    cr.execute(f"SELECT XP,lvl FROM ranks WHERE id = '{ig}'")
-    xpdata = cr.fetchone()
-    return xpdata
+# def get_user_XP_LVL(ig):
+#     cr.execute(f"SELECT XP,lvl FROM ranks WHERE id = '{ig}'")
+#     xpdata = cr.fetchone()
+#     return xpdata
 
+users = get_users_from_db()
+Blocked_Words = get_bad_words()
 """EVENTS"""
 @client.event
 async def on_ready():
@@ -67,7 +67,7 @@ async def on_member_remove(member):
 @client.event
 async def on_member_join(member):
     if member.id not in users:
-        cr.execute(f"INSERT INTO users (user_name,id,no_of_BD,roles) VALUES ('{member}','{member.id}','0','Bystanders')")
+        cr.execute(f"INSERT INTO users (user_name,id,roles) VALUES ('{member}','{member.id}','Bystanders')")
         cr.execute(f"INSERT INTO ranks (id,XP,lvl) VALUES ('{member.id}','{int(0)}','{int(0)}')")
         db.commit()
     await client.get_channel(839671710856773632).send(embed=discord.Embed(title="NEW MEMBER",description=f"Thanks {member.name} for joining!"))
@@ -152,10 +152,10 @@ async def ping(ctx):
 
 @client.tree.command(name= "welcome", description= "say hi", guild=discord.Object(id = 839639743771836456))
 async def self(ctx: discord.Interaction, name: str):
-    await ctx.response.send_message(f"Hello {name}!")
+    await ctx.response.send_message(f"Hello! {name}")
 
 
-"""Music commands"""
+"""Music Commands"""
 @client.command()
 async def join(ctx):
     if (ctx.author.voice):
@@ -177,7 +177,6 @@ async def join(ctx):
     #if author isnt in ANY channels
     else :
         await ctx.send("You are not in a voice channel, you must be in a voice channnel to run this command!")
-
 @client.tree.command(name='join',description='Join the Voice Channel', guild=discord.Object(id = 839639743771836456))
 async def join(ctx:discord.Interaction):
     if (ctx.user.voice):
@@ -201,9 +200,35 @@ async def join(ctx:discord.Interaction):
     else :
         await ctx.response.send_message("You are not in a voice channel, you must be in a voice channnel to run this command!")
 
-@client.tree.command(name='kick',description='Kick specific member', guild=discord.Object(id = 839639743771836456))
-async def Kick(message, Command:discord.Interaction, member: discord.Member, reason: str) :
-    if "BOT" not in str(message.author.roles):
-        await Command.response.send_message(f"{member},{reason}")
+#leave
+@client.command()
+async def leave(ctx) :
+	if (ctx.voice_client) :
+		await ctx.guild.voice_client.disconnect()
+		await ctx.send("I left the voice channel")
+	else :
+		await ctx.send("I am not in a voice channel")
 
-client.run("OTUwNzU0ODM1MTg2MjA4ODU4.GMFHcF.Bz11w2CqScprrAgLq-IM2Zj4_crD0uN7YvWzcY")
+@client.tree.command(name="leave",description="Leave the voice channel", guild=MY_GUILD)
+async def leave(ctx:discord.Interaction):
+    if (ctx.guild.voice_client):
+        await ctx.response.send_message("**LEFT**")
+        await ctx.guild.voice_client.disconnect()
+    else:
+        await ctx.response.send_message("I am not in a voice channel")
+#leave
+""""Music Commands"""
+@client.tree.command(name='kick',description='Kick a specific member',guild=discord.Object(id = 839639743771836456))
+async def Kick(ctx:discord.Interaction, member: discord.Member, reason: str):
+    if "BOT" not in str(member.roles):
+        if "Admin" in str(ctx.user.roles):
+            await ctx.guild.kick(member)
+            await ctx.response.send_message(f"{member},{reason}")
+        else:
+            await ctx.response.send_message(f"sent to admin")
+            await client.get_channel(839642523722055691).send(f"{ctx.user} tried {member}\nReason: {reason}") ##in warn
+    else:
+        await ctx.response.send_message("Bot lol")
+
+
+client.run(read_token())
