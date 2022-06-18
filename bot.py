@@ -190,9 +190,9 @@ async def leave(ctx:discord.Interaction):
 """"Music Commands"""
 
 
-@client.tree.command(name='kick',description='Kick a specific member',guild=discord.Object(id = 839639743771836456))
+@client.tree.command(name='kick',description='Kick a specific member',guild=MY_GUILD)
 async def Kick(ctx:discord.Interaction, member: discord.Member, reason: str):
-    if "Valorant Crew" in str(ctx.user.roles):
+    if "Admin" in str(ctx.user.roles):
         await ctx.guild.kick(member)
         await ctx.response.send_message(f"{member},{reason}")
     else:
@@ -202,9 +202,31 @@ async def Kick(ctx:discord.Interaction, member: discord.Member, reason: str):
 
 @client.tree.command(name="say", description="say message in channel",guild=discord.Object(id = 839639743771836456))
 async def Say(ctx:discord.Interaction, channel: discord.TextChannel, message: str):
-    async with channel.typing():
-        await client.get_channel(channel.id).send(message)
-        await ctx.response.send_message("Message sent")
+    if "Admin" in str(ctx.user.roles):
+        async with channel.typing():
+            await client.get_channel(channel.id).send(message)
+            await ctx.response.send_message("Message sent")
+    else :
+        ctx.response.send_message("You MUST be an Admin to Announce")
+
+@client.tree.command(name="warn",description='Warn Someone',guild=MY_GUILD)
+async def warn(ctx:discord.Interaction,member:discord.Member,reason:str):
+    if "Admin" in str(ctx.user.roles):
+        cr.execute(f"SELECT warns FROM violations WHERE id = '{member.id}'")
+        newno = int(cr.fetchone()[0])+1
+        cr.execute(f"UPDATE violations SET warns = '{newno}' WHERE id = '{member.id}'")
+        db.commit()
+        await ctx.response.send_message(
+            f'"{member}" has been warned\n'
+            # f'Reason : {Reason}'
+              f'Now he has {newno} warns')
+        dm = await member.create_dm()
+        await dm.send(embed=discord.Embed(title='You are warned',description=f"Reason : {reason} \nYou have {newno} Warns NOW!"))
+
+    else:
+        await ctx.response.send_message("Waiting For Admin Approval")
+        await client.get_channel(839642523722055691).send(f"Author : {ctx.user.mention} \nWant's to warn {member.mention}\nBecause of : {reason}")
+
 
 
 
