@@ -1,7 +1,10 @@
+from asyncio import Server
+from http import server
 import discord
+from h11 import SERVER
 from Token_reader import read_token
 from Prefix_Commands import *
-from discord import app_commands
+from discord import Embed, Guild, app_commands
 import sqlite3
 from youtubesearchpython import VideosSearch
 from discord.ext import commands
@@ -14,44 +17,11 @@ intents.members = True
 intents.message_content = True
 client,cr,music = commands.Bot(command_prefix='!',intents=intents),db.cursor(),Music()
 
-
-
-# def get_bad_words():
-#     global Blocked_Words
-#     cr.execute("SELECT bad_word FROM bad_words")
-#     data = cr.fetchall()
-#     Blocked_Words = []
-#     for i in range(len(data)):
-#         Blocked_Words.append(data[i][0])
-# get_bad_words()
-
-# def get_id(user_name):
-#     cr.execute(f"SELECT id FROM users WHERE user_name = '{user_name}'")
-#     it = cr.fetchone()
-#     id = it[0]
-#     return id
-
-# def get_user_name(id):
-#     cr.execute(f"SELECT user_name FROM users WHERE id = '{id}'")
-#     user_ame = cr.fetchone()
-#     user_name = user_ame[0]
-#     return user_name
-
-# def get_users_from_db():
-#     global users
-#     cr.execute("SELECT id FROM users")
-#     lol = cr.fetchall()
-#     users = []
-#     for i in range(len(lol)):
-#         users.append(lol[i][0])
-
-# def get_user_XP_LVL(ig):
-#     cr.execute(f"SELECT XP,lvl FROM ranks WHERE id = '{ig}'")
-#     xpdata = cr.fetchone()
-#     return xpdata
-
 users = get_users_from_db()
 Blocked_Words = get_bad_words()
+
+
+
 """EVENTS"""
 @client.event
 async def on_ready():
@@ -218,17 +188,26 @@ async def leave(ctx:discord.Interaction):
         await ctx.response.send_message("I am not in a voice channel")
 #leave
 """"Music Commands"""
+
+
 @client.tree.command(name='kick',description='Kick a specific member',guild=discord.Object(id = 839639743771836456))
 async def Kick(ctx:discord.Interaction, member: discord.Member, reason: str):
-    if "BOT" not in str(member.roles):
-        if "Admin" in str(ctx.user.roles):
-            await ctx.guild.kick(member)
-            await ctx.response.send_message(f"{member},{reason}")
-        else:
-            await ctx.response.send_message(f"sent to admin")
-            await client.get_channel(839642523722055691).send(f"{ctx.user} tried {member}\nReason: {reason}") ##in warn
+    if "Valorant Crew" in str(ctx.user.roles):
+        await ctx.guild.kick(member)
+        await ctx.response.send_message(f"{member},{reason}")
     else:
-        await ctx.response.send_message("Bot lol")
+        emb = discord.Embed(title= "Kick Request", color = discord.Color.red(), description= f"{ctx.user} want's to kick {member}\nReason: {reason}")
+        await ctx.response.send_message(f"sent to admin")
+        await client.get_channel(839642523722055691).send(embed=emb) ##in warn
+
+@client.tree.command(name="say", description="say message in channel",guild=discord.Object(id = 839639743771836456))
+async def Say(ctx:discord.Interaction, channel: discord.TextChannel, message: str):
+    async with channel.typing():
+        await client.get_channel(channel.id).send(message)
+        await ctx.response.send_message("Message sent")
+
+
+
 
 
 client.run(read_token())
