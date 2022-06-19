@@ -22,9 +22,9 @@ def get_id(user_name):
 ###################################################
 
 ###################################################
-def get_user_name(id):
-    sqlite3.connect("bot_database.db").cursor().execute(f"SELECT user_name FROM users WHERE id = '{id}'")
-    user_ame = sqlite3.connect("bot_database.db").cursor().fetchone()
+def get_user_name(d):
+    cr.execute(f"SELECT user_name FROM users WHERE id = '{d}'")
+    user_ame = cr.fetchone()
     user_name = user_ame[0]
     return user_name
 ###################################################
