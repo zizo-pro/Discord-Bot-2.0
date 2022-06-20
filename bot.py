@@ -1,4 +1,5 @@
 from datetime import datetime
+from email import message
 import discord
 from h11 import SERVER
 from Token_reader import read_token
@@ -321,7 +322,21 @@ async def Say(ctx:discord.Interaction, channel: discord.TextChannel, message: st
             await client.get_channel(channel.id).send(message)
             await ctx.response.send_message("Message sent")
     else :
-        ctx.response.send_message("You MUST be an Admin to Announce")
+        ctx.response.send_message("You **MUST** be an Admin to Announce")
+
+@client.tree.command(name="gamehistory", description= "adjusting a message for sending game historyin a channel", guild=discord.Object(id = 839639743771836456))
+async def history(ctx: discord.Interaction, channel: discord.TextChannel, t1member1:discord.Member=None, t1member1kills:str="#/#/#", t1member2:discord.Member=None,
+t1member2kills:str="#/#/#", t1member3:discord.Member=None, t1member3kills:str="#/#/#", t1member4:discord.Member=None, t1member4kills:str="#/#/#", t1member5:discord.Member=None,
+t1member5kills:str="#/#/#", t2member1:discord.Member=None, t2member1kills:str="#/#/#", t2member2:discord.Member=None, t2member2kills:str="#/#/#", t2member3:discord.Member=None,
+t2member3kills:str="#/#/#", t2member4:discord.Member=None, t2member4kills:str="#/#/#", t2member5:discord.Member=None, t2member5kills:str="#/#/#"):
+    if "Admin" in str(ctx.user.roles):
+        async with channel.typing():
+            emb=discord.Embed(title='Message history', color= discord.Color.dark_magenta())
+            emb.add_field(name= "**Team one**", value= f"{t1member1}\n{t1member2}\n{t1member3}\n{t1member4}\n{t1member5}")
+            emb.add_field(name= "**K/D/A**", value= f"{t1member1kills}\n{t1member2kills}\n{t1member3kills}\n{t1member4kills}\n{t1member5kills}")
+        await ctx.response.send_message(embed=emb)
+
+
 
 @client.tree.command(name="warn",description='Warn Someone',guild=MY_GUILD)
 async def warn(ctx:discord.Interaction,member:discord.Member,reason:str):
@@ -333,7 +348,7 @@ async def warn(ctx:discord.Interaction,member:discord.Member,reason:str):
         await ctx.response.send_message(
             f'"{member}" has been warned\n'
             # f'Reason : {Reason}'
-              f'Now he has {newno} warns')
+            f'Now he has {newno} warns')
         dm = await member.create_dm()
         await dm.send(embed=discord.Embed(title='You are warned',description=f"Reason : {reason} \nYou have {newno} Warns NOW!"))
 
@@ -425,10 +440,10 @@ async def addbdword(ctx:discord.Interaction,word:str):
         lvl = get_user_XP_LVL(ctx.user.id)[1]
         newxp = int(xp)+5
         tg_XP = int(lvl)*100
-        if newxp >= tg_XP and "BOT" not in str(message.author.roles):
+        if newxp >= tg_XP and "BOT" not in str(ctx.user.roles):
             lvl +=1
             cr.execute(f"UPDATE ranks SET XP = '0', lvl = {lvl} WHERE id = '{ctx.user.id}'")
-            await message.channel.send(f"Good Job {ctx.user.mention} for advancing to level: {lvl}")
+            await ctx.channel.send(f"Good Job {ctx.user.mention} for advancing to level: {lvl}")
         else:
             cr.execute(f"UPDATE ranks SET XP = '{newxp}' WHERE id = '{ctx.user.id}'")
         cr.execute(f"INSERT INTO bad_words (bad_word) VALUES ('{word}')")
