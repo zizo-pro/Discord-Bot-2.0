@@ -351,6 +351,7 @@ async def warn(ctx:discord.Interaction,member:discord.Member,reason:str):
             f'Now he has {newno} warns')
         dm = await member.create_dm()
         await dm.send(embed=discord.Embed(title='You are warned',description=f"Reason : {reason} \nYou have {newno} Warns NOW!"))
+        await ctx.response.send_message("Done")
 
     else:
         await ctx.response.send_message("Waiting For Admin Approval")
@@ -459,16 +460,10 @@ async def صباحو(message):
 async def avatar(ctx:discord.Interaction,*,member:discord.Member=None):
     if member == None :
         member = ctx.user
-        UserAvatar = member.avatar
-        emb = discord.Embed(title = f"{member.name}'s Avatar", description="Look , He's so SEXY")
-        emb.set_image(url = UserAvatar)
-        await ctx.response.send_message(embed = emb)
-
-    elif member != None :
-        UserAvatar = member.avatar
-        emb = discord.Embed(title = f"{member.name}'s Avatar", description="Look , He's so SEXY")
-        emb.set_image(url = UserAvatar)
-        await ctx.response.send_message(embed = emb)
+    UserAvatar = member.avatar
+    emb = discord.Embed(title = f"{member.name}'s Avatar", description="Look , He's so SEXY")
+    emb.set_image(url = UserAvatar)
+    await ctx.response.send_message(embed = emb)
 
 @client.tree.command(name="spam",description="spam",guild=MY_GUILD)
 async def spam(ctx:discord.Interaction, member:discord.Member=None):
@@ -482,5 +477,68 @@ async def spam(ctx:discord.Interaction, member:discord.Member=None):
             await ctx.response.send_message(count)
             count = count - 1
 
+@client.tree.command(name="info",description="Show info",guild=MY_GUILD)
+async def info(ctx:discord.Interaction,member:discord.Member=None):
+    if member==None:
+        member=ctx.user
+    cr.execute(f"SELECT roles FROM users WHERE id = '{member.id}'")
+    r = cr.fetchone()[0]
+    user = client.get_user(member.id)
+    emb = discord.Embed(title = (f"Welcome {ctx.user}"),description = f"This is informations of\n{member}",color = 0x6B5B95)
+    emb.add_field(name = "Account Level",inline = True,value=get_user_XP_LVL(member.id)[1])
+    emb.add_field(name = "Roles",inline = True,value=r.replace("@everyone,",""))
+    dateY = member.created_at.strftime("%Y")
+    dateM = member.created_at.strftime("%m")
+    dateD = member.created_at.strftime("%d")
+    date2 = datetime.today().strftime("%Y/%m/%d")
+    d2 = datetime(int(dateY), int(dateM), int(dateD))
+    x = d2.strftime("%Y/%m/%d")
+    dt1 = datetime.strptime(x,"%Y/%m/%d")
+    dt2 = datetime.strptime(date2,"%Y/%m/%d")
+    d = dt2 - dt1
+    ind = str(d).find("d")
+    years = int(str(d)[:ind])/365
+    ins = str(years).find(".")
+    days = int(str(years)[ins+1:])
+    hi = len(str(days)) 
+    n ="1"
+    new = days/int(n.ljust(hi + len(str(n)),'0'))
+    emb.add_field(name = "Account Age",inline = True,value=f"{str(years)[:ins]} year {int(new*365)} day")
+    await ctx.response.send_message(embed=emb)
+
+@client.tree.command(name='about',description='about',guild=MY_GUILD)
+async def about(ctx:discord.Interaction):
+    total_text_channels = len(ctx.guild.text_channels)
+    total_voice_channels = len(ctx.guild.voice_channels)
+    emb = discord.Embed(title =f"{ctx.guild.name} Info",description="Information about the server",color=discord.Color.blue())
+    emb.add_field(name="🆔server ID",value=ctx.guild.id,inline = True)
+    emb.add_field(name="📆Created On",value=ctx.guild.created_at.strftime("%d/%m/%Y"),inline=True)
+    emb.add_field(name="👑owner",value=ctx.guild.owner,inline=True)
+    emb.add_field(name="👥Member",value=f"{ctx.guild.member_count} Members",inline=True)
+    emb.add_field(name="💬Channels", value = f'{total_text_channels} Text | {total_voice_channels} Voice', inline = True)
+    emb.add_field(name="🌎Region",value="Middle East",inline=True)
+    await ctx.response.send_message(embed=emb)
+
+
+@client.command()
+async def about(ctx):
+    total_text_channels = len(ctx.guild.text_channels)
+    total_voice_channels = len(ctx.guild.voice_channels)
+    emb = discord.Embed(title =f"{ctx.guild.name} Info",description="Information about the server",color=discord.Color.blue())
+    emb.add_field(name="🆔server ID",value=ctx.guild.id,inline = True)
+    emb.add_field(name="📆Created On",value=ctx.guild.created_at.strftime("%d/%m/%Y"),inline=True)
+    emb.add_field(name="👑owner",value=ctx.guild.owner,inline=True)
+    emb.add_field(name="👥Member",value=f"{ctx.guild.member_count} Members",inline=True)
+    emb.add_field(name="💬Channels", value = f'{total_text_channels} Text | {total_voice_channels} Voice', inline = True)
+    emb.add_field(name="🌎Region",value="Middle East",inline=True)
+    await ctx.send(embed=emb)
+
+@client.tree.command(name='clear',description='delete messages',guild=MY_GUILD)
+async def clear(ctx:discord.Interaction,number_of_msg:int=None):
+    await ctx.response.send_message("Done")
+    if number_of_msg !=None:
+        await ctx.channel.purge(limit=number_of_msg)
+    else:
+        await ctx.channel.purge()
 
 client.run(read_token())
